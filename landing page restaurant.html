@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>خدمة المطعم</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 40px;
+            background-color: #f7f7f7;
+            color: #333;
+        }
+        h1 {
+            color: #ff6600;
+        }
+        button, a {
+            background-color: #ff6600;
+            color: white;
+            padding: 12px 20px;
+            text-decoration: none;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+        button:hover, a:hover {
+            background-color: #e65c00;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>مرحباً بك في مطعمنا</h1>
+    <p>الرجاء السماح بالوصول لموقعك الجغرافي للتحقق من توفر الخدمة.</p>
+    <button id="checkLocation">تحقق من موقعي</button>
+
+    <div id="distanceMsg" style="margin-top: 20px; font-weight: bold;"></div>
+
+    <div id="inside" class="hidden">
+        <p>🎉 أنت داخل المطعم! يمكنك بدء المحادثة الآن.</p>
+        <a href="https://www.facebook.com/messages/t/579242531947067" target="_blank">ابدأ المحادثة</a>
+    </div>
+
+    <div id="outside" class="hidden">
+        <p>❌ عذراً، هذه الخدمة متاحة فقط داخل المطعم.</p>
+    </div>
+
+    <script>
+        // ضع هنا إحداثيات المطعم الحقيقية
+        const restaurantLat = 35.6591239;
+        const restaurantLon = 10.9476175;
+        const radiusMeters = 50; // نصف القطر المسموح
+
+        function haversineDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371000; // نصف قطر الأرض بالمتر
+            const toRad = (x) => x * Math.PI / 180;
+
+            const dLat = toRad(lat2 - lat1);
+            const dLon = toRad(lon2 - lon1);
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        document.getElementById("checkLocation").addEventListener("click", () => {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((position) => {
+                    const userLat = position.coords.latitude;
+                    const userLon = position.coords.longitude;
+
+                    const distance = haversineDistance(userLat, userLon, restaurantLat, restaurantLon);
+
+                    // عرض المسافة على الصفحة
+                    document.getElementById("distanceMsg").innerHTML = `المسافة بينك وبين المطعم: ${distance.toFixed(2)} متر`;
+
+                    if (distance <= radiusMeters) {
+                        document.getElementById("inside").classList.remove("hidden");
+                        document.getElementById("outside").classList.add("hidden");
+                    } else {
+                        document.getElementById("outside").classList.remove("hidden");
+                        document.getElementById("inside").classList.add("hidden");
+                    }
+                }, (error) => {
+                    alert("تعذر الحصول على موقعك. الرجاء تفعيل GPS.");
+                });
+            } else {
+                alert("المتصفح لا يدعم تحديد الموقع الجغرافي.");
+            }
+        });
+    </script>
+
+</body>
+</html>
